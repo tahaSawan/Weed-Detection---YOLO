@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weed Detection - Precision Farming Robot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+
+        .upload-section.dragover {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .settings {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .settings h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .confidence-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .confidence-value {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .results-section {
+            display: none;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .weed-count {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .images-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            text-align: center;
+        }
+
+        .image-container h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .detections-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .detection-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detection-info {
+            flex: 1;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .images-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Weed Detection</h1>
+            <p>Precision Farming Robot - AI-Powered Weed Detection</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">
+                    <strong>Drag & Drop</strong> your image here or <strong>click to browse</strong>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Image
+                </button>
+                <button class="upload-btn" onclick="startCamera()">
+                    📹 Use Camera
+                </button>
+            </div>
+
+            <div class="settings">
+                <h3>⚙️ Detection Settings</h3>
+                <label for="confidenceSlider">Confidence Threshold: <span class="confidence-value" id="confidenceValue">0.5</span></label>
+                <input type="range" id="confidenceSlider" class="confidence-slider" 
+                       min="0.1" max="1.0" step="0.1" value="0.5">
+                <small>Higher values = more confident detections, fewer false positives</small>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>🔍 Analyzing image for weeds...</p>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <div class="results-header">
+                    <h3>📊 Detection Results</h3>
+                    <div class="weed-count" id="weedCount">0 weeds detected</div>
+                </div>
+
+                <div class="images-container">
+                    <div class="image-container">
+                        <h4>Original Image</h4>
+                        <img id="originalImage" class="result-image" alt="Original image">
+                    </div>
+                    <div class="image-container">
+                        <h4>Detection Result</h4>
+                        <img id="resultImage" class="result-image" alt="Detection result">
+                    </div>
+                </div>
+
+                <div class="detections-list" id="detectionsList">
+                    <h4>🔍 Individual Detections</h4>
+                    <div id="detectionsContainer">
+                        <!-- Detections will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentFile = null;
+        let confidence = 0.5;
+
+        // DOM elements
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const confidenceSlider = document.getElementById('confidenceSlider');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const originalImage = document.getElementById('originalImage');
+        const resultImage = document.getElementById('resultImage');
+        const weedCount = document.getElementById('weedCount');
+        const detectionsContainer = document.getElementById('detectionsContainer');
+
+        // Event listeners
+        fileInput.addEventListener('change', handleFileSelect);
+        confidenceSlider.addEventListener('input', updateConfidence);
+
+        // Drag and drop functionality
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+        uploadSection.addEventListener('drop', handleDrop);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file.');
+                return;
+            }
+
+            currentFile = file;
+            displayOriginalImage(file);
+            detectWeeds(file);
+        }
+
+        function displayOriginalImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateConfidence() {
+            confidence = parseFloat(confidenceSlider.value);
+            confidenceValue.textContent = confidence.toFixed(1);
+        }
+
+        function detectWeeds(file) {
+            showLoading(true);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('confidence', confidence);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Detection failed');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showError('Network error: ' + error.message);
+            });
+        }
+
+        function displayResults(data) {
+            // Update weed count
+            weedCount.textContent = `${data.weed_count} weed${data.weed_count !== 1 ? 's' : ''} detected`;
+
+            // Display result image
+            resultImage.src = `/result/${data.result_image.split('/').pop()}`;
+
+            // Display detections
+            displayDetections(data.detections);
+
+            // Show results section
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function displayDetections(detections) {
+            detectionsContainer.innerHTML = '';
+            
+            if (detections.length === 0) {
+                detectionsContainer.innerHTML = '<p>No weeds detected in this image.</p>';
+                return;
+            }
+
+            detections.forEach((detection, index) => {
+                const detectionElement = document.createElement('div');
+                detectionElement.className = 'detection-item';
+                
+                const confidencePercent = (detection.confidence * 100).toFixed(1);
+                
+                detectionElement.innerHTML = `
+                    <div class="detection-info">
+                        <strong>Weed ${index + 1}</strong><br>
+                        <small>Confidence: ${confidencePercent}%</small>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <small>Box: [${detection.bbox.map(x => x.toFixed(0)).join(', ')}]</small>
+                    </div>
+                `;
+                
+                detectionsContainer.appendChild(detectionElement);
+            });
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            if (show) {
+                resultsSection.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(errorDiv, mainContent.firstChild);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function startCamera() {
+            // This would implement camera functionality
+            alert('Camera functionality will be implemented in the next version!');
+        }
+
+        // Check model status on page load
+        window.addEventListener('load', function() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.model_loaded) {
+                        showError('Model not loaded. Please train a model first.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking model status:', error);
+                });
+        });
+    </script>
+</body>
+</html>

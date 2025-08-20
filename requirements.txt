@@ -1,0 +1,31 @@
+# Core ML and Computer Vision
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Data Processing
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Web Application
+Flask>=2.3.0
+Flask-CORS>=4.0.0
+Werkzeug>=2.3.0
+
+# Database
+psycopg2-binary>=2.9.0
+SQLAlchemy>=2.0.0
+
+# Utilities
+requests>=2.31.0
+tqdm>=4.65.0
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Development
+jupyter>=1.0.0
+ipykernel>=6.25.0
